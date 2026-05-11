@@ -48,13 +48,8 @@ services:
       - DB_NAME=club_registration
       - JWT_SECRET=club-registration-secret-2026
       - FRONTEND_URL=http://std.meo.in.th:13001
-      - CHOKIDAR_USEPOLLING=true
     ports:
       - "14001:14001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: bun run dev
     depends_on:
       mysql:
         condition: service_healthy
@@ -67,14 +62,8 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://std.meo.in.th:14001
       - NEXT_PUBLIC_SOCKET_URL=http://std.meo.in.th:14001
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
     ports:
       - "13001:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: bun run dev
     depends_on:
       - backend
 

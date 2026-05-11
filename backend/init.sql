@@ -61,7 +61,9 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Seed Data
 -- ===================================================
 
--- Admin user จะถูก seed อัตโนมัติผ่าน server.js เมื่อ start (admin / admin123)
+-- Admin user (password hashed: admin123)
+INSERT INTO admins (username, password) VALUES
+('admin', '$2a$10$dMXCJp3LCFaLR/nH0Rm2K.eYiAVrCd.eI9.fhXYLSVh2bW8xSzBJm');
 
 -- 5 ชมรมตัวอย่าง
 INSERT INTO clubs (name, description, max_members) VALUES
