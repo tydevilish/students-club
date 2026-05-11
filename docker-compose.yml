@@ -47,7 +47,7 @@ services:
       - DB_PASSWORD=rootpassword
       - DB_NAME=club_registration
       - JWT_SECRET=club-registration-secret-2026
-      - FRONTEND_URL=http://std.meo.in.th:13001
+      - FRONTEND_URL=https://std.meo.in.th
     ports:
       - "14001:14001"
     depends_on:
@@ -55,13 +55,11 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     image: std-club-frontend:latest
     container_name: club-frontend
     restart: always
-    environment:
-      - NEXT_PUBLIC_API_URL=http://std.meo.in.th:14001
-      - NEXT_PUBLIC_SOCKET_URL=http://std.meo.in.th:14001
     ports:
       - "13001:3000"
     depends_on:

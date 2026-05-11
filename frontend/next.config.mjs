@@ -8,6 +8,18 @@ const nextConfig = {
     "localhost",
     "localhost:13001",
   ],
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://backend:14001/api/:path*",
+      },
+      {
+        source: "/socket.io/:path*",
+        destination: "http://backend:14001/socket.io/:path*",
+      },
+    ];
+  },
   headers: async () => {
     return [
       {
