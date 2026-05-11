@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Admin user (password hashed: admin123)
 INSERT INTO admins (username, password) VALUES
-('admin', '$2a$10$dMXCJp3LCFaLR/nH0Rm2K.eYiAVrCd.eI9.fhXYLSVh2bW8xSzBJm');
+('admin', '$2b$10$VCaHAT6rT0U8xt3HXOsLr.n4fAwmjmHAE7ikaMuHy0LDeb/2rw2Xq');
 
 -- 5 ชมรมตัวอย่าง
 INSERT INTO clubs (name, description, max_members) VALUES
