@@ -17,9 +17,9 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self'; " +
-              "style-src 'self'; " +
-              "img-src 'self'; " +
+              "script-src 'self' 'unsafe-inline'; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data:; " +
               "font-src 'self'; " +
               "connect-src 'self' wss: https://std.meo.in.th:14001; " +
               "object-src 'none'; " +
