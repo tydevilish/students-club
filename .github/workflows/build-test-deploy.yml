@@ -12,7 +12,7 @@ on:
 jobs:
   # Stage 1: BUILD
   build:
-    name: 📦 Build
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
 
   # Stage 2: TEST
   test:
-    name: ✅ Test
+    name: Test
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -59,11 +59,11 @@ jobs:
 
       - name: Lint and test
         run: |
-          echo "✅ Skipping lint/test - scripts not configured yet"
+          echo "Skipping lint/test - scripts not configured yet"
 
   # Stage 3: DEPLOY
   deploy:
-    name: 🚀 Deploy
+    name: Deploy
     runs-on: ubuntu-latest
     needs: [build, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
