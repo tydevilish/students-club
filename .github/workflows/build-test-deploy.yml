@@ -21,13 +21,20 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: backend
         run: bun install --frozen-lockfile
 
       - name: Build frontend
-        run: bun run -r frontend build
+        working-directory: frontend
+        run: bun run build
 
       - name: Build backend
+        working-directory: backend
         run: echo "Backend ready"
 
   # Stage 2: TEST
@@ -42,14 +49,31 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
+        working-directory: frontend
         run: bun install --frozen-lockfile
 
-      - name: Lint code
+      - name: Install backend dependencies
+        working-directory: backend
+        run: bun install --frozen-lockfile
+
+      - name: Lint frontend
+        working-directory: frontend
         run: bun run lint
         continue-on-error: true
 
-      - name: Test
+      - name: Lint backend
+        working-directory: backend
+        run: bun run lint
+        continue-on-error: true
+
+      - name: Test frontend
+        working-directory: frontend
+        run: bun run test
+        continue-on-error: true
+
+      - name: Test backend
+        working-directory: backend
         run: bun run test
         continue-on-error: true
 
