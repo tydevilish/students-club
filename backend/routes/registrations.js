@@ -8,8 +8,8 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const { student_id, club_id } = req.body;
-    if (!student_id || !club_id) {
+    const { student_id, student_id_code, club_id } = req.body;
+    if (!student_id || !student_id_code || !club_id) {
       return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
     }
 
@@ -26,11 +26,16 @@ router.post('/', async (req, res) => {
 
     await conn.beginTransaction();
 
-    // Check student exists
-    const [studentRows] = await conn.query('SELECT id FROM students WHERE id = ?', [student_id]);
+    // Check student exists and matches student_id_code (Security: prevent IDOR)
+    const [studentRows] = await conn.query('SELECT id, student_id FROM students WHERE id = ?', [student_id]);
     if (studentRows.length === 0) {
       await conn.rollback();
       return res.status(404).json({ error: 'ไม่พบนักศึกษา' });
+    }
+    
+    if (studentRows[0].student_id !== student_id_code) {
+      await conn.rollback();
+      return res.status(403).json({ error: 'ข้อมูลนักศึกษาไม่ถูกต้อง' });
     }
 
     // Check already registered

@@ -15,7 +15,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" className={`${prompt.variable} h-full`}>
+    <html lang="th" className={`${prompt.variable} h-full`} suppressHydrationWarning>
       <body
         className="min-h-full flex flex-col antialiased"
         style={{ fontFamily: "'Prompt', sans-serif" }}

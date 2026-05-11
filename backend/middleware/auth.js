@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'club-registration-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'club-registration-secret-2026';
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;

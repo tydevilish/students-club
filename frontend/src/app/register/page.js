@@ -60,6 +60,7 @@ export default function RegisterPage() {
     try {
       await api.post("/api/registrations", {
         student_id: student.id,
+        student_id_code: student.student_id,
         club_id: selectedClub.id,
       });
       sessionStorage.setItem("registered_club", JSON.stringify(selectedClub));
