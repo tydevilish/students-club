@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, Edit2, Trash2, X, AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
@@ -23,9 +23,7 @@ export default function AdminStudentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  useEffect(() => { fetchStudents(); }, [page, search]);
-
-  async function fetchStudents() {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(`/api/students?page=${page}&limit=15&search=${search}`);
@@ -37,7 +35,11 @@ export default function AdminStudentsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, search]);
+
+  useEffect(() => {
+    Promise.resolve().then(() => fetchStudents());
+  }, [fetchStudents]);
 
   function openCreateModal() {
     setEditingStudent(null);

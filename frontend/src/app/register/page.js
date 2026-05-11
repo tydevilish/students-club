@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Check, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
@@ -17,14 +17,27 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  useEffect(() => {
-    const stored = sessionStorage.getItem("student");
-    if (!stored) {
-      router.push("/");
-      return;
+  const fetchClubs = useCallback(async () => {
+    try {
+      const res = await api.get("/api/clubs");
+      setClubs(res.data);
+    } catch (err) {
+      setError("ไม่สามารถโหลดข้อมูลชมรมได้");
+    } finally {
+      setLoading(false);
     }
-    setStudent(JSON.parse(stored));
-    fetchClubs();
+  }, []);
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      const stored = sessionStorage.getItem("student");
+      if (!stored) {
+        router.push("/");
+        return;
+      }
+      setStudent(JSON.parse(stored));
+      fetchClubs();
+    });
 
     const socket = getSocket();
     socket.on("club:updated", (updatedClub) => {
@@ -40,18 +53,7 @@ export default function RegisterPage() {
       socket.off("club:updated");
       socket.off("club:deleted");
     };
-  }, [router]);
-
-  async function fetchClubs() {
-    try {
-      const res = await api.get("/api/clubs");
-      setClubs(res.data);
-    } catch (err) {
-      setError("ไม่สามารถโหลดข้อมูลชมรมได้");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [router, fetchClubs]);
 
   async function handleRegister() {
     if (!selectedClub || !student) return;

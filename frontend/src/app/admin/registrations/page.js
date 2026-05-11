@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Loader2, Filter, ClipboardList } from "lucide-react";
 import api from "@/lib/api";
@@ -14,28 +14,14 @@ export default function AdminRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  useEffect(() => {
-    fetchClubs();
-    fetchRegistrations();
-    const socket = getSocket();
-    socket.on("registration:new", () => fetchRegistrations());
-    socket.on("registration:removed", () => fetchRegistrations());
-    return () => {
-      socket.off("registration:new");
-      socket.off("registration:removed");
-    };
-  }, []);
-
-  useEffect(() => { fetchRegistrations(); }, [selectedClub]);
-
-  async function fetchClubs() {
+  const fetchClubs = useCallback(async () => {
     try {
       const res = await api.get("/api/clubs");
       setClubs(res.data);
     } catch {}
-  }
+  }, []);
 
-  async function fetchRegistrations() {
+  const fetchRegistrations = useCallback(async () => {
     setLoading(true);
     try {
       const url = selectedClub ? `/api/registrations?club_id=${selectedClub}` : "/api/registrations";
@@ -43,7 +29,27 @@ export default function AdminRegistrationsPage() {
       setRegistrations(res.data);
     } catch { toast.error("โหลดข้อมูลล้มเหลว"); }
     finally { setLoading(false); }
-  }
+  }, [selectedClub]);
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchClubs();
+      fetchRegistrations();
+    });
+    const socket = getSocket();
+    socket.on("registration:new", () => fetchRegistrations());
+    socket.on("registration:removed", () => fetchRegistrations());
+    return () => {
+      socket.off("registration:new");
+      socket.off("registration:removed");
+    };
+  }, [fetchClubs, fetchRegistrations]);
+
+  useEffect(() => {
+    if (selectedClub) {
+      Promise.resolve().then(() => fetchRegistrations());
+    }
+  }, [selectedClub, fetchRegistrations]);
 
   async function handleDelete(id) {
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,19 +25,7 @@ export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (pathname === "/admin/login") return;
-    if (!admin) {
-      checkAuth();
-    }
-  }, [pathname, admin]);
-
-  // Skip layout for login page
-  if (pathname === "/admin/login") {
-    return children;
-  }
-
-  async function checkAuth() {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("admin_token");
       if (!token) {
@@ -52,6 +40,18 @@ export default function AdminLayout({ children }) {
     } finally {
       setLoading(false);
     }
+  }, [router]);
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return;
+    if (!admin) {
+      Promise.resolve().then(() => checkAuth());
+    }
+  }, [pathname, admin, checkAuth]);
+
+  // Skip layout for login page
+  if (pathname === "/admin/login") {
+    return children;
   }
 
   function handleLogout() {

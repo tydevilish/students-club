@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Users, BookOpen, ClipboardList, TrendingUp, Activity } from "lucide-react";
 import api from "@/lib/api";
@@ -10,8 +10,19 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await api.get("/api/settings/stats");
+      setStats(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchStats();
+    Promise.resolve().then(() => fetchStats());
     const socket = getSocket();
     socket.on("club:updated", () => fetchStats());
     socket.on("registration:new", () => fetchStats());
@@ -21,18 +32,7 @@ export default function AdminDashboard() {
       socket.off("registration:new");
       socket.off("registration:removed");
     };
-  }, []);
-
-  async function fetchStats() {
-    try {
-      const res = await api.get("/api/settings/stats");
-      setStats(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [fetchStats]);
 
   if (loading) {
     return (

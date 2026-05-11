@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
@@ -120,12 +121,12 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-sm text-gray-400 hover:text-primary-600 transition-colors"
           >
             ← กลับหน้าลงทะเบียน
-          </a>
+          </Link>
         </div>
       </motion.div>
     </div>

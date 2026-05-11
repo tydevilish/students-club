@@ -11,16 +11,18 @@ export default function SuccessPage() {
   const [club, setClub] = useState(null);
 
   useEffect(() => {
-    const storedStudent = sessionStorage.getItem("student");
-    const storedClub = sessionStorage.getItem("registered_club");
+    Promise.resolve().then(() => {
+      const storedStudent = sessionStorage.getItem("student");
+      const storedClub = sessionStorage.getItem("registered_club");
 
-    if (!storedStudent || !storedClub) {
-      router.push("/");
-      return;
-    }
+      if (!storedStudent || !storedClub) {
+        router.push("/");
+        return;
+      }
 
-    setStudent(JSON.parse(storedStudent));
-    setClub(JSON.parse(storedClub));
+      setStudent(JSON.parse(storedStudent));
+      setClub(JSON.parse(storedClub));
+    });
 
     // Automatically redirect to home page after 3 seconds
     const timer = setTimeout(() => {

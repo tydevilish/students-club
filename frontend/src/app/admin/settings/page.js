@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Settings, Save, Loader2, Clock, Power } from "lucide-react";
 import api from "@/lib/api";
@@ -11,9 +11,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { fetchSettings(); }, []);
-
-  async function fetchSettings() {
+  const fetchSettings = useCallback(async () => {
     try {
       const res = await api.get("/api/settings");
       setSettings({
@@ -23,7 +21,9 @@ export default function AdminSettingsPage() {
     } catch {
       toast.error("โหลดการตั้งค่าล้มเหลว");
     } finally { setLoading(false); }
-  }
+  }, []);
+
+  useEffect(() => { Promise.resolve().then(() => fetchSettings()); }, [fetchSettings]);
 
   async function handleSave() {
     setSaving(true);

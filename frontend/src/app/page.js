@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { GraduationCap, Users, Clock, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -16,8 +17,17 @@ export default function HomePage() {
   const [countdown, setCountdown] = useState(null);
   const [alreadyRegistered, setAlreadyRegistered] = useState(null);
 
+  async function fetchSettings() {
+    try {
+      const res = await api.get("/api/settings");
+      setSettings(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   useEffect(() => {
-    fetchSettings();
+    Promise.resolve().then(() => fetchSettings());
     const socket = getSocket();
     socket.on("settings:changed", (data) => {
       setSettings(data);
@@ -46,15 +56,6 @@ export default function HomePage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [settings]);
-
-  async function fetchSettings() {
-    try {
-      const res = await api.get("/api/settings");
-      setSettings(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   const isOpen = settings?.registration_open === "true";
   const deadline = settings?.registration_deadline ? new Date(settings.registration_deadline) : null;
@@ -107,8 +108,8 @@ export default function HomePage() {
           className="text-center relative z-10 max-w-2xl mx-auto"
         >
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-1 backdrop-blur-sm">
-            <img
-              src="images/logo2.png"
+            <Image
+              src="/images/logo2.png"
               alt="Logo"
               width={55}
               height={55}
