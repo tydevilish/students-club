@@ -21,7 +21,7 @@ const nextConfig = {
               "style-src 'self'; " +
               "img-src 'self'; " +
               "font-src 'self'; " +
-              "connect-src 'self' ws: wss: http://localhost:14001 https://std.meo.in.th:14001; " +
+              "connect-src 'self' wss: https://std.meo.in.th:14001; " +
               "object-src 'none'; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +

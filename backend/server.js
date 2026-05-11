@@ -36,7 +36,19 @@ app.use((req, res, next) => {
       "img-src 'self'; " +
       "font-src 'self'; " +
       "connect-src 'self' ws: wss: " +
-      allowedOrigins.map((origin) => new URL(origin).origin).join(" ") +
+      allowedOrigins
+        .map((origin) => new URL(origin).origin)
+        .filter(
+          (origin) =>
+            origin.startsWith("https://") ||
+            origin === "http://localhost:13001",
+        )
+        .map((origin) =>
+          origin === "http://localhost:13001"
+            ? "https://std.meo.in.th:14001"
+            : origin.replace("http://", "https://"),
+        )
+        .join(" ") +
       "; " +
       "object-src 'none'; " +
       "frame-ancestors 'none'; " +
