@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     const result = {};
     rows.forEach(r => { result[r.setting_key] = r.setting_value; });
     res.json(result);
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });
@@ -43,7 +43,7 @@ router.put('/', authMiddleware, async (req, res) => {
     if (io) io.emit('settings:changed', result);
 
     res.json(result);
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });

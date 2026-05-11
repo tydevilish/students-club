@@ -19,7 +19,7 @@ router.get('/:id', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM clubs WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: 'ไม่พบชมรม' });
     res.json(rows[0]);
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });
@@ -41,7 +41,7 @@ router.post('/', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('club:updated', newClub[0]);
     res.status(201).json(newClub[0]);
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });
@@ -71,7 +71,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('club:updated', updated[0]);
     res.json(updated[0]);
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });

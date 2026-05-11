@@ -117,7 +117,7 @@ async function start() {
       await pool.query("SELECT 1");
       console.log("Database connected");
       break;
-    } catch (err) {
+    } catch (_err) {
       retries--;
       console.log(`Waiting for database... (${30 - retries}/30)`);
       await new Promise((r) => setTimeout(r, 2000));

@@ -18,11 +18,31 @@ module.exports = [
         setInterval: "readonly",
         clearTimeout: "readonly",
         clearInterval: "readonly",
+        // Added globals
+        Bun: "readonly",
+        URL: "readonly",
       },
     },
     rules: {
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-console": "off",
+      "no-undef": "error",
+    },
+  },
+  {
+    files: ["__tests__/**/*.test.js"],
+    languageOptions: {
+      sourceType: "module",
+      globals: {
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        test: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+      },
     },
   },
   {
