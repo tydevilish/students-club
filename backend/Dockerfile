@@ -2,7 +2,7 @@
 FROM oven/bun:1.3.0 AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN bun install
+RUN rm -f bun.lock* && bun install
 COPY . .
 
 # -- Production stage --
