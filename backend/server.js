@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const bcrypt = require("bcryptjs");
+// bcryptjs removed in favor of Bun.password
 const pool = require("./db");
 const { setupSocket } = require("./socket");
 
@@ -95,7 +95,7 @@ async function seedAdmin() {
   try {
     const [rows] = await pool.query("SELECT COUNT(*) as count FROM admins");
     if (rows[0].count === 0) {
-      const hash = await bcrypt.hash("admin123", 10);
+      const hash = await Bun.password.hash("admin123");
       await pool.query(
         "INSERT INTO admins (username, password) VALUES (?, ?)",
         ["admin", hash],

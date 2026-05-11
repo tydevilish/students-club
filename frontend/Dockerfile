@@ -2,8 +2,8 @@ FROM oven/bun:1.3.0 AS builder
 
 WORKDIR /app
 
-COPY package.json bun.lockb* ./
-RUN rm -f bun.lockb* && bun install
+COPY package.json bun.lock ./
+RUN bun install
 
 COPY . .
 
@@ -18,8 +18,8 @@ FROM oven/bun:1.3.0-slim
 
 WORKDIR /app
 
-COPY package.json bun.lock* ./
-RUN rm -f bun.lock* && bun install --production
+COPY package.json bun.lock ./
+RUN bun install --production
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public

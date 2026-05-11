@@ -7,7 +7,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || 'rootpassword',
   database: process.env.DB_NAME || 'club_registration',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 100,
   queueLimit: 0,
   charset: 'utf8mb4',
 });

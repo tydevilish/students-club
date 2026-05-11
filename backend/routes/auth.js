@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
+// bcryptjs removed in favor of Bun.password
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
@@ -21,7 +21,7 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     }
 
     const admin = rows[0];
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await Bun.password.verify(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
     }
