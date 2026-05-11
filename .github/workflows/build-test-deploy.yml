@@ -88,4 +88,4 @@ jobs:
             --exclude='.env' \
             --exclude='*.sqlite' \
             . | ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST_IP }} \
-            "tar -xzf - && docker compose up -d --build && docker image prune -af"
+            "mkdir -p /root/students-club && tar -xzf - -C /root/students-club && cd /root/students-club && docker compose up -d --build && docker image prune -af"
