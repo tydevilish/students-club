@@ -31,13 +31,14 @@ app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
     "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-      "style-src 'self' 'unsafe-inline'; " +
-      "img-src 'self' data: https:; " +
-      "font-src 'self' data:; " +
+      "script-src 'self'; " +
+      "style-src 'self'; " +
+      "img-src 'self'; " +
+      "font-src 'self'; " +
       "connect-src 'self' ws: wss: " +
       allowedOrigins.map((origin) => new URL(origin).origin).join(" ") +
       "; " +
+      "object-src 'none'; " +
       "frame-ancestors 'none'; " +
       "base-uri 'self'; " +
       "form-action 'self'",

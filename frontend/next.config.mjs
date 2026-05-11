@@ -17,11 +17,12 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-              "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: https:; " +
-              "font-src 'self' data:; " +
+              "script-src 'self'; " +
+              "style-src 'self'; " +
+              "img-src 'self'; " +
+              "font-src 'self'; " +
               "connect-src 'self' ws: wss: http://localhost:14001 https://std.meo.in.th:14001; " +
+              "object-src 'none'; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
               "form-action 'self'; " +
