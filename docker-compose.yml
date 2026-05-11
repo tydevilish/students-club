@@ -36,6 +36,7 @@ services:
 
   backend:
     build: ./backend
+    image: std-club-backend:latest
     container_name: club-backend
     restart: always
     environment:
@@ -60,6 +61,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: std-club-frontend:latest
     container_name: club-frontend
     restart: always
     environment:
