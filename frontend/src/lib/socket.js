@@ -1,6 +1,7 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:14001";
 
 let socket = null;
 

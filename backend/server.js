@@ -1,41 +1,43 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const pool = require('./db');
-const { setupSocket } = require('./socket');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const pool = require("./db");
+const { setupSocket } = require("./socket");
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: process.env.FRONTEND_URL || "http://localhost:13001",
+    methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
 // Make io accessible to routes
-app.set('io', io);
+app.set("io", io);
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:13001",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/students', require('./routes/students'));
-app.use('/api/clubs', require('./routes/clubs'));
-app.use('/api/registrations', require('./routes/registrations'));
-app.use('/api/settings', require('./routes/settings'));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/students", require("./routes/students"));
+app.use("/api/clubs", require("./routes/clubs"));
+app.use("/api/registrations", require("./routes/registrations"));
+app.use("/api/settings", require("./routes/settings"));
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Socket.IO setup
@@ -44,35 +46,38 @@ setupSocket(io);
 // Seed admin on startup
 async function seedAdmin() {
   try {
-    const [rows] = await pool.query('SELECT COUNT(*) as count FROM admins');
+    const [rows] = await pool.query("SELECT COUNT(*) as count FROM admins");
     if (rows[0].count === 0) {
-      const hash = await bcrypt.hash('admin123', 10);
-      await pool.query('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hash]);
-      console.log('Admin user seeded: admin / admin123');
+      const hash = await bcrypt.hash("admin123", 10);
+      await pool.query(
+        "INSERT INTO admins (username, password) VALUES (?, ?)",
+        ["admin", hash],
+      );
+      console.log("Admin user seeded: admin / admin123");
     }
   } catch (err) {
-    console.error('Seed admin error:', err);
+    console.error("Seed admin error:", err);
   }
 }
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 14001;
 
 async function start() {
   // Wait for DB to be ready
   let retries = 30;
   while (retries > 0) {
     try {
-      await pool.query('SELECT 1');
-      console.log('Database connected');
+      await pool.query("SELECT 1");
+      console.log("Database connected");
       break;
     } catch (err) {
       retries--;
       console.log(`Waiting for database... (${30 - retries}/30)`);
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
   if (retries === 0) {
-    console.error('Could not connect to database');
+    console.error("Could not connect to database");
     process.exit(1);
   }
 

@@ -9,13 +9,13 @@ services:
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
-      - "3306:3306"
+      - "13307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -29,7 +29,7 @@ services:
       PMA_PORT: 3306
       UPLOAD_LIMIT: 100M
     ports:
-      - "8080:80"
+      - "18081:80"
     depends_on:
       mysql:
         condition: service_healthy
@@ -39,17 +39,17 @@ services:
     container_name: club-backend
     restart: always
     environment:
-      - PORT=4000
+      - PORT=14001
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - DB_NAME=club_registration
       - JWT_SECRET=club-registration-secret-2026
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=http://localhost:13001
       - CHOKIDAR_USEPOLLING=true
     ports:
-      - "4000:4000"
+      - "14001:14001"
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -63,12 +63,12 @@ services:
     container_name: club-frontend
     restart: always
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4000
-      - NEXT_PUBLIC_SOCKET_URL=http://localhost:4000
+      - NEXT_PUBLIC_API_URL=http://localhost:14001
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:14001
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
     ports:
-      - "3000:3000"
+      - "13001:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
