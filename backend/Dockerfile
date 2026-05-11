@@ -9,6 +9,7 @@ COPY . .
 FROM oven/bun:1.3.0-slim
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/*.js ./
 COPY --from=builder /app/routes ./routes
