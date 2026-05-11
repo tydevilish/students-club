@@ -34,8 +34,14 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-600 to-red-800 relative overflow-hidden flex items-center justify-center p-4">
-      <div className="absolute rounded-full bg-white/10 pointer-events-none" style={{ top: -100, right: -100, width: 300, height: 300 }} />
-      <div className="absolute rounded-full bg-white/10 pointer-events-none" style={{ bottom: -50, left: -50, width: 200, height: 200 }} />
+      <div
+        className="absolute rounded-full bg-white/10 pointer-events-none"
+        style={{ top: -100, right: -100, width: 300, height: 300 }}
+      />
+      <div
+        className="absolute rounded-full bg-white/10 pointer-events-none"
+        style={{ bottom: -50, left: -50, width: 200, height: 200 }}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -44,13 +50,17 @@ export default function AdminLoginPage() {
         className="bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] p-8 max-w-sm w-full md:p-10"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">เข้าสู่ระบบแอดมิน</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            เข้าสู่ระบบแอดมิน
+          </h1>
           <p className="text-gray-500 text-sm mt-1">ระบบจัดการชมรม</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-1">
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">ชื่อผู้ใช้</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">
+              ชื่อผู้ใช้
+            </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -65,7 +75,9 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">รหัสผ่าน</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">
+              รหัสผ่าน
+            </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -108,7 +120,10 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-gray-400 hover:text-primary-600 transition-colors">
+          <a
+            href="/"
+            className="text-sm text-gray-400 hover:text-primary-600 transition-colors"
+          >
             ← กลับหน้าลงทะเบียน
           </a>
         </div>
