@@ -18,9 +18,7 @@ FROM oven/bun:1.3.0-slim
 
 WORKDIR /app
 
-COPY package.json ./
-COPY --from=builder /app/bun.lock ./
-RUN bun install --production
+COPY --from=builder /app/node_modules ./node_modules
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
