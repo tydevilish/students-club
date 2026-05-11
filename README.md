@@ -86,8 +86,8 @@ Development docker-compose ประกอบด้วย 4 services:
 
 1. **mysql** — MySQL 8 container, port 13307 on host, volume persist data, init schema via `init.sql`
 2. **phpmyadmin** — phpMyAdmin, port 18081, เชื่อมต่อ MySQL
-3. **backend** — Express app, port 14001, hot-reload with nodemon, mount volume
-4. **frontend** — Next.js dev server, port 13001, mount volume
+3. **backend** — Bun runtime Express app, port 14001, hot-reload with Bun watch, mount volume
+4. **frontend** — Bun runtime Next.js dev server, port 13001, mount volume
 
 #### [MODIFY] [docker-compose.prod.yml](file:///d:/attendance/docker-compose.prod.yml)
 
@@ -105,13 +105,13 @@ Production compose — ใช้ Dockerfile build, ไม่มี hot-reload
 
 #### [NEW] [Dockerfile](file:///d:/attendance/backend/Dockerfile)
 
-- Node 20 Alpine base
-- Copy, install deps, expose 4000
+- Bun base image
+- Copy, install deps with Bun, expose 4000
 
 #### [MODIFY] [package.json](file:///d:/attendance/backend/package.json)
 
-- เพิ่ม dependencies: `mysql2`, `socket.io`, `cors`, `bcryptjs`, `jsonwebtoken`, `dotenv`, `nodemon`
-- เพิ่ม scripts: `dev`, `start`
+- เพิ่ม dependencies: `mysql2`, `socket.io`, `cors`, `bcryptjs`, `jsonwebtoken`, `dotenv`
+- เพิ่ม scripts: `dev`, `start` สำหรับ Bun
 
 #### [NEW] [server.js](file:///d:/attendance/backend/server.js)
 
