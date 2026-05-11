@@ -67,7 +67,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
         : 0,
       clubStats,
     });
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });

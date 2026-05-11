@@ -85,7 +85,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('club:deleted', { id: parseInt(id) });
     res.json({ message: 'ลบชมรมสำเร็จ' });
-  } catch (err) {
+  } catch (_err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
   }
 });

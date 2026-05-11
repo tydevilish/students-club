@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 
 describe("Health Check", () => {
   it("should have server.js entry point", () => {
-    const server = require("../server.js");
+    const _server = require("../server.js");
     // Verifies the file can be loaded without syntax errors
     expect(true).toBe(true);
   });

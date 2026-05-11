@@ -28,11 +28,11 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: bun install
+        run: bun install --no-frozen-lockfile
 
       - name: Install backend dependencies
         working-directory: backend
-        run: bun install
+        run: bun install --no-frozen-lockfile
 
       - name: Lint frontend
         working-directory: frontend
