@@ -1,4 +1,4 @@
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.3.0 AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 
 RUN bun run build
 
-FROM oven/bun:latest
+FROM oven/bun:1.3.0-slim
 
 WORKDIR /app
 

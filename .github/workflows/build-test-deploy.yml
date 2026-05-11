@@ -13,7 +13,44 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # Stage 1: BUILD DOCKER IMAGES
+  # Stage 1: LINT & TEST (runs immediately, no Docker needed)
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.0"
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: bun install --frozen-lockfile
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: bun run lint
+
+      - name: Lint backend
+        working-directory: backend
+        run: bun run lint
+
+      - name: Test backend
+        working-directory: backend
+        run: bun run test
+
+      - name: Build frontend (type check)
+        working-directory: frontend
+        run: bun run build
+
+  # Stage 2: BUILD DOCKER IMAGES (runs in parallel with lint)
   build-images:
     name: Build Docker Images
     runs-on: ubuntu-latest
@@ -31,6 +68,8 @@ jobs:
           push: false
           tags: std-club-backend:latest
           outputs: type=docker,dest=/tmp/backend-image.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build frontend image
         uses: docker/build-push-action@v5
@@ -39,6 +78,8 @@ jobs:
           push: false
           tags: std-club-frontend:latest
           outputs: type=docker,dest=/tmp/frontend-image.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Upload backend image artifact
         uses: actions/upload-artifact@v4
@@ -54,35 +95,53 @@ jobs:
           path: /tmp/frontend-image.tar
           retention-days: 1
 
-  # Stage 2: TEST
-  test:
-    name: Test
+  # Stage 2.5: SECURITY SCAN
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
     needs: build-images
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Download backend image
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: /tmp
 
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: bun install --frozen-lockfile
+      - name: Download frontend image
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp
 
-      - name: Install backend dependencies
-        working-directory: backend
-        run: bun install --frozen-lockfile
-
-      - name: Lint and test
+      - name: Load Docker images
         run: |
-          echo "Skipping lint/test - scripts not configured yet"
+          docker load -i /tmp/backend-image.tar
+          docker load -i /tmp/frontend-image.tar
+
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "std-club-backend:latest"
+          format: "table"
+          exit-code: "0"
+          severity: "CRITICAL,HIGH"
+
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "std-club-frontend:latest"
+          format: "table"
+          exit-code: "0"
+          severity: "CRITICAL,HIGH"
 
   # Stage 3: DEPLOY TO LOCAL SERVER
   deploy:
     name: Deploy to Local Server
     runs-on: ubuntu-latest
-    needs: [build-images, test]
+    needs: [lint-and-test, build-images, security-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout code
@@ -135,6 +194,18 @@ jobs:
             . | ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST_IP }} \
             "tar -xzf - -C /root/students-club"
 
+      - name: Create .env on server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST_IP }} << 'EOF'
+          cat > /root/students-club/.env << ENVFILE
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          DB_NAME=club_registration
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          ENVFILE
+          chmod 600 /root/students-club/.env
+          EOF
+
       - name: Load images and deploy
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST_IP }} << 'EOF'
@@ -153,4 +224,51 @@ jobs:
 
           # Clean up unused images
           docker image prune -af
+          EOF
+
+      - name: Health check
+        run: |
+          echo "Waiting 30s for services to start..."
+          sleep 30
+
+          # Check backend health
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.HOST_IP }} << 'EOF'
+          echo "=== Checking container status ==="
+          docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+          echo ""
+          echo "=== Backend health check ==="
+          if curl -sf http://localhost:14001/api/health > /dev/null 2>&1; then
+            echo "✅ Backend is healthy"
+          else
+            echo "⚠️ Backend health endpoint not responding (may not have /api/health route)"
+            # Fallback: check if container is running
+            if docker ps --filter "name=club-backend" --filter "status=running" -q | grep -q .; then
+              echo "✅ Backend container is running"
+            else
+              echo "❌ Backend container is NOT running!"
+              docker logs club-backend --tail 20
+              exit 1
+            fi
+          fi
+
+          echo ""
+          echo "=== Frontend health check ==="
+          if docker ps --filter "name=club-frontend" --filter "status=running" -q | grep -q .; then
+            echo "✅ Frontend container is running"
+          else
+            echo "❌ Frontend container is NOT running!"
+            docker logs club-frontend --tail 20
+            exit 1
+          fi
+
+          echo ""
+          echo "=== MySQL health check ==="
+          if docker ps --filter "name=club-mysql" --filter "status=running" -q | grep -q .; then
+            echo "✅ MySQL container is running"
+          else
+            echo "❌ MySQL container is NOT running!"
+            docker logs club-mysql --tail 20
+            exit 1
+          fi
           EOF

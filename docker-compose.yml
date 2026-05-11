@@ -4,8 +4,8 @@ services:
     container_name: club-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: club_registration
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-club_registration}
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
@@ -44,10 +44,10 @@ services:
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_USER=root
-      - DB_PASSWORD=rootpassword
-      - DB_NAME=club_registration
-      - JWT_SECRET=club-registration-secret-2026
-      - FRONTEND_URL=https://std.meo.in.th
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME:-club_registration}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-https://std.meo.in.th}
     ports:
       - "14001:14001"
     depends_on:

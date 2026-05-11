@@ -3,11 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
+const { loginRateLimiter, resetLoginAttempts } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', loginRateLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -30,6 +31,9 @@ router.post('/login', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // ล็อกอินสำเร็จให้รีเซ็ตจำนวนครั้งที่เคยนับไว้
+    resetLoginAttempts(req);
 
     res.json({ token, admin: { id: admin.id, username: admin.username } });
   } catch (err) {

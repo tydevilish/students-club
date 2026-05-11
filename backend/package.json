@@ -6,7 +6,9 @@
   "packageManager": "bun@1.3.0",
   "scripts": {
     "dev": "bun --watch server.js",
-    "start": "bun server.js"
+    "start": "bun server.js",
+    "lint": "eslint .",
+    "test": "bun test"
   },
   "keywords": [],
   "author": "",
