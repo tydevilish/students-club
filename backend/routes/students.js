@@ -43,12 +43,13 @@ router.get('/export', authMiddleware, async (req, res) => {
 
     // Build CSV with UTF-8 BOM (required for Google Sheets / Excel Thai)
     const BOM = '\uFEFF';
-    const headers = ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ระดับชั้น', 'ชมรม', 'วันที่ลงทะเบียน'];
+    const headers = ['รหัสนักศึกษา', 'ชื่อ-นามสกุล', 'ระดับชั้น', 'ชมรม', 'วันที่ลงทะเบียน'];
     const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csvRows = [
       headers.map(escape).join(','),
       ...rows.map(r => [
-        r.student_id, r.prefix, r.first_name, r.last_name,
+        r.student_id,
+        `${r.prefix}${r.first_name} ${r.last_name}`,
         r.level, r.club_name, r.registered_at,
       ].map(escape).join(',')),
     ];
