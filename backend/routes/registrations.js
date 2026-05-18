@@ -4,7 +4,68 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-// POST /api/registrations — ลงทะเบียนชมรม (public)
+// POST /api/registrations/admin — Admin registers a student directly (no student_id_code needed)
+router.post('/admin', authMiddleware, async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const { student_id, club_id } = req.body; // student_id = DB id (integer)
+    if (!student_id || !club_id) {
+      return res.status(400).json({ error: 'กรุณาระบุนักศึกษาและชมรม' });
+    }
+
+    await conn.beginTransaction();
+
+    // Check student exists
+    const [studentRows] = await conn.query('SELECT id, student_id, prefix, first_name, last_name FROM students WHERE id = ?', [student_id]);
+    if (studentRows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'ไม่พบนักศึกษา' });
+    }
+
+    // Check already registered
+    const [existingReg] = await conn.query('SELECT id FROM registrations WHERE student_id = ?', [student_id]);
+    if (existingReg.length > 0) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'นักศึกษาลงทะเบียนชมรมแล้ว' });
+    }
+
+    // Check club capacity with lock
+    const [clubRows] = await conn.query('SELECT * FROM clubs WHERE id = ? FOR UPDATE', [club_id]);
+    if (clubRows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'ไม่พบชมรม' });
+    }
+    const club = clubRows[0];
+    if (!club.is_active) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'ชมรมนี้ปิดรับสมัครแล้ว' });
+    }
+    if (club.current_members >= club.max_members) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'ชมรมนี้เต็มแล้ว' });
+    }
+
+    await conn.query('INSERT INTO registrations (student_id, club_id) VALUES (?, ?)', [student_id, club_id]);
+    await conn.query('UPDATE clubs SET current_members = current_members + 1 WHERE id = ?', [club_id]);
+    await conn.commit();
+
+    const [updatedClub] = await pool.query('SELECT * FROM clubs WHERE id = ?', [club_id]);
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('club:updated', updatedClub[0]);
+      io.emit('registration:new', { student_id, club_id });
+    }
+
+    res.status(201).json({ message: 'ลงทะเบียนสำเร็จ', club: updatedClub[0] });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Admin registration error:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
+  } finally {
+    conn.release();
+  }
+});
+
 router.post('/', async (req, res) => {
   const conn = await pool.getConnection();
   try {

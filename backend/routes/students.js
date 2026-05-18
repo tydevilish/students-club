@@ -5,29 +5,106 @@ const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 
 // GET /api/students — List all (admin)
+// GET /api/students/export — Export all as CSV (admin)
+router.get('/export', authMiddleware, async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    const status = req.query.status || 'all';
+    const level  = req.query.level  || '';
+
+    const conditions = [];
+    const params = [];
+
+    if (search) {
+      conditions.push('(s.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ?)');
+      const p = `%${search}%`;
+      params.push(p, p, p);
+    }
+    if (status === 'registered')   conditions.push('r.id IS NOT NULL');
+    if (status === 'unregistered') conditions.push('r.id IS NULL');
+    if (level) {
+      conditions.push('s.level = ?');
+      params.push(level);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [rows] = await pool.query(
+      `SELECT s.student_id, s.prefix, s.first_name, s.last_name, s.level,
+              COALESCE(c.name, '') as club_name,
+              DATE_FORMAT(r.registered_at, '%Y-%m-%d %H:%i:%s') as registered_at
+       FROM students s
+       LEFT JOIN registrations r ON s.id = r.student_id
+       LEFT JOIN clubs c ON r.club_id = c.id
+       ${where}
+       ORDER BY s.level, s.student_id`,
+      params
+    );
+
+    // Build CSV with UTF-8 BOM (required for Google Sheets / Excel Thai)
+    const BOM = '\uFEFF';
+    const headers = ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ระดับชั้น', 'ชมรม', 'วันที่ลงทะเบียน'];
+    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csvRows = [
+      headers.map(escape).join(','),
+      ...rows.map(r => [
+        r.student_id, r.prefix, r.first_name, r.last_name,
+        r.level, r.club_name, r.registered_at,
+      ].map(escape).join(',')),
+    ];
+
+    const filename = `students_${new Date().toISOString().slice(0,10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(BOM + csvRows.join('\r\n'));
+  } catch (err) {
+    console.error('Export students error:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาด' });
+  }
+});
+
+// GET /api/students — List all (admin)
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const search = req.query.search || '';
+    const status = req.query.status || 'all'; // 'all' | 'registered' | 'unregistered'
+    const level  = req.query.level  || '';    // '' | 'ปวช.1' | 'ปวช.2' | ... | 'ปวส.2'
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
 
-    let whereClause = '';
+    const conditions = [];
     let params = [];
 
     if (search) {
-      whereClause = 'WHERE s.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ?';
+      conditions.push('(s.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ?)');
       const searchParam = `%${search}%`;
-      params = [searchParam, searchParam, searchParam];
+      params.push(searchParam, searchParam, searchParam);
     }
 
+    if (status === 'registered') {
+      conditions.push('r.id IS NOT NULL');
+    } else if (status === 'unregistered') {
+      conditions.push('r.id IS NULL');
+    }
+
+    if (level) {
+      conditions.push('s.level = ?');
+      params.push(level);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
     const [countRows] = await pool.query(
-      `SELECT COUNT(*) as total FROM students s ${whereClause}`,
+      `SELECT COUNT(*) as total
+       FROM students s
+       LEFT JOIN registrations r ON s.id = r.student_id
+       ${whereClause}`,
       params
     );
 
     const [rows] = await pool.query(
-      `SELECT s.*, 
+      `SELECT s.*,
         r.club_id, c.name as club_name
        FROM students s
        LEFT JOIN registrations r ON s.id = r.student_id
@@ -38,11 +115,33 @@ router.get('/', authMiddleware, async (req, res) => {
       [...params, limit, offset]
     );
 
+    // Count totals for each status (unfiltered by status, but filtered by search)
+    const searchConditions = search
+      ? ['(s.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ?)'] : [];
+    const searchParams = search ? [`%${search}%`, `%${search}%`, `%${search}%`] : [];
+    const searchWhere = searchConditions.length > 0 ? `WHERE ${searchConditions.join(' AND ')}` : '';
+
+    const [summaryRows] = await pool.query(
+      `SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END) as registered,
+        SUM(CASE WHEN r.id IS NULL THEN 1 ELSE 0 END) as unregistered
+       FROM students s
+       LEFT JOIN registrations r ON s.id = r.student_id
+       ${searchWhere}`,
+      searchParams
+    );
+
     res.json({
       students: rows,
       total: countRows[0].total,
       page,
       totalPages: Math.ceil(countRows[0].total / limit),
+      summary: {
+        total: Number(summaryRows[0].total),
+        registered: Number(summaryRows[0].registered),
+        unregistered: Number(summaryRows[0].unregistered),
+      },
     });
   } catch (err) {
     console.error('Get students error:', err);

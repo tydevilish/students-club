@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Edit2, Trash2, X, AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, AlertCircle, Loader2, ChevronLeft, ChevronRight, Users, CheckCircle2, Clock, FileDown, GraduationCap } from "lucide-react";
 import api from "@/lib/api";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -12,9 +12,13 @@ const PREFIXES = ["นาย", "นางสาว", "นาง"];
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState([]);
   const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ total: 0, registered: 0, unregistered: 0 });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'registered' | 'unregistered'
+  const [levelFilter, setLevelFilter] = useState("");      // '' | 'ปวช.1' | ... | 'ปวส.2'
+  const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -26,20 +30,51 @@ export default function AdminStudentsPage() {
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/api/students?page=${page}&limit=15&search=${search}`);
+      const params = new URLSearchParams({
+        page, limit: 15, search, status: statusFilter,
+        ...(levelFilter ? { level: levelFilter } : {}),
+      });
+      const res = await api.get(`/api/students?${params}`);
       setStudents(res.data.students);
       setTotal(res.data.total);
       setTotalPages(res.data.totalPages);
+      if (res.data.summary) setSummary(res.data.summary);
     } catch (err) {
       toast.error("โหลดข้อมูลล้มเหลว");
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, statusFilter, levelFilter]);
 
   useEffect(() => {
     Promise.resolve().then(() => fetchStudents());
   }, [fetchStudents]);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({
+        search, status: statusFilter,
+        ...(levelFilter ? { level: levelFilter } : {}),
+      });
+      // Use axios with responseType blob to handle UTF-8 BOM correctly
+      const res = await api.get(`/api/students/export?${params}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      const levelSuffix = levelFilter ? `_${levelFilter}` : '';
+      const statusSuffix = statusFilter !== 'all' ? `_${statusFilter}` : '';
+      a.href = url;
+      a.download = `นักศึกษา${levelSuffix}${statusSuffix}_${date}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('ดาวน์โหลดสำเร็จ');
+    } catch (err) {
+      toast.error('ดาวน์โหลดไม่สำเร็จ');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function openCreateModal() {
     setEditingStudent(null);
@@ -110,24 +145,87 @@ export default function AdminStudentsPage() {
           <h2 className="text-xl font-bold text-gray-800">จัดการนักศึกษา</h2>
           <p className="text-sm text-gray-500">ทั้งหมด {total} คน</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="bg-gradient-to-br from-red-600 to-red-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 hover:opacity-90 transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" /> เพิ่มนักศึกษา
-        </button>
+        <div className="flex gap-2">
+          {/* Export button */}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="border-2 border-emerald-500 text-emerald-600 px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 hover:bg-emerald-50 transition-all text-sm disabled:opacity-50"
+          >
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            {exporting ? 'กำลังดาวน์โหลด...' : 'Export CSV'}
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="bg-gradient-to-br from-red-600 to-red-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 hover:opacity-90 transition-all text-sm"
+          >
+            <Plus className="w-4 h-4" /> เพิ่มนักศึกษา
+          </button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="ค้นหา รหัส, ชื่อ, นามสกุล..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-primary-600 transition-colors"
-        />
+      {/* Search + Filter bar */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="ค้นหา รหัส, ชื่อ, นามสกุล..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-primary-600 transition-colors"
+          />
+        </div>
+
+        {/* Level filter dropdown */}
+        <div className="relative">
+          <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <select
+            value={levelFilter}
+            onChange={(e) => { setLevelFilter(e.target.value); setPage(1); }}
+            className={`pl-9 pr-8 py-2.5 border-2 rounded-xl text-sm font-medium transition-all appearance-none cursor-pointer ${
+              levelFilter
+                ? 'border-violet-500 bg-violet-50 text-violet-700'
+                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            <option value="">ทุกระดับชั้น</option>
+            <optgroup label="ปวช.">
+              {['ปวช.1', 'ปวช.2', 'ปวช.3'].map(l => <option key={l} value={l}>{l}</option>)}
+            </optgroup>
+            <optgroup label="ปวส.">
+              {['ปวส.1', 'ปวส.2'].map(l => <option key={l} value={l}>{l}</option>)}
+            </optgroup>
+          </select>
+        </div>
+
+        {/* Status filter tabs */}
+        <div className="flex gap-2">
+          {[
+            { key: "all",          label: "ทั้งหมด",           count: summary.total,         icon: Users,          activeClass: "bg-gray-800 text-white border-gray-800" },
+            { key: "registered",   label: "ลงชมรมแล้ว",       count: summary.registered,    icon: CheckCircle2,   activeClass: "bg-emerald-600 text-white border-emerald-600" },
+            { key: "unregistered", label: "ยังไม่ได้ลง",     count: summary.unregistered,  icon: Clock,          activeClass: "bg-amber-500 text-white border-amber-500" },
+          ].map(({ key, label, count, icon: Icon, activeClass }) => (
+            <button
+              key={key}
+              onClick={() => { setStatusFilter(key); setPage(1); }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all whitespace-nowrap ${
+                statusFilter === key
+                  ? activeClass
+                  : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+              <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
+                statusFilter === key ? "bg-white/20" : "bg-gray-100 text-gray-500"
+              }`}>
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
