@@ -252,14 +252,7 @@ export default function HomePage() {
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <a
-                href="/admin/login"
-                className="text-sm text-gray-400 hover:text-red-600 transition-colors"
-              >
-                เข้าสู่ระบบแอดมิน →
-              </a>
-            </div>
+
           </div>
         </motion.div>
 
