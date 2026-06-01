@@ -1,5 +1,4 @@
 import { describe, it, expect, mock, beforeAll } from "bun:test";
-const express = require('express');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
 
@@ -11,7 +10,7 @@ const settingsRouter = require("../routes/settings");
 
 // Helper to simulate request to settings router
 function simulateRequest(method, url, body = {}, headers = {}) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve) => {
     let responseStatus = 200;
     const responseHeaders = {};
 
@@ -77,7 +76,7 @@ function simulateRequest(method, url, body = {}, headers = {}) {
           }
         }
       };
-      await next();
+      next();
     } else {
       resolve({ status: 404, body: { error: "Not Found" }, headers: responseHeaders });
     }
@@ -116,7 +115,7 @@ describe("Settings Routes", () => {
   });
 
   it("POST /admins should create admin when input is valid", async () => {
-    mockQuery.mockImplementation(async (sql, params) => {
+    mockQuery.mockImplementation(async (sql, _params) => {
       if (sql.includes("SELECT id FROM admins WHERE username = ?")) {
         return [[]]; // username not taken
       }
